@@ -3,7 +3,7 @@
 /**
  * Plugin Name: NRFC Auto Links
  * Description: Automatically links specific text patterns to their respective URLs.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: NRFC Automation
  * License: GPL2+
  */
