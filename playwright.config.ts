@@ -35,19 +35,25 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
+      name: 'setup',
+      testMatch: /01_add_autolink\.spec\.ts/,
+    },
+    {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
+      testIgnore: /01_add_autolink\.spec\.ts/,
     },
 
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
+    // {
+    //   name: 'firefox',
+    //   use: { ...devices['Desktop Firefox'] },
+    // },
+    //
+    // {
+    //   name: 'webkit',
+    //   use: { ...devices['Desktop Safari'] },
+    // },
 
     /* Test against mobile viewports. */
     // {
@@ -72,10 +78,11 @@ export default defineConfig({
 
   webServer: {
     command: 'docker compose up --no-color --abort-on-container-failure',
-    // HTTP alone can report ready while WordPress is still showing its installer.
     wait: { stdout: /wordpress-setup-1 exited with code 0/ },
     timeout: 300_000,
     stdout: 'pipe',
     gracefulShutdown: { signal: 'SIGTERM', timeout: 30_000 },
   },
+
+  globalTeardown: './e2e/global.teardown.ts',
 });

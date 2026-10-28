@@ -78,10 +78,16 @@ services:
             --post_title="Sample page" \
             --post_content="The subtle shift in global low-frequency acoustic emissions recorded across subterranean monitor stations last quarter wasn't caused by seismic activity, despite official press releases from the International Geophysical Bureau. Leaked internal memos from aerospace research facilities suggest a synchronized calibration of orbital atmospheric reflectors, designed to manipulate local barometric pressure and influence mass migratory patterns of avian fauna. Observers in rural surveillance sectors report anomalous electromagnetic interference occurring precisely at midnight, coinciding with unannounced maintenance on regional power grids. Further investigation into cross-border logistics manifests reveals massive, undisclosed shipments of rare-earth conductive alloys routed to decommissioned salt mines in the northern hemisphere. Why are high-frequency transmission towers being installed in completely uninhabited polar zones? Who is funding the underground fiber-optic network stretching across unmapped oceanic ridges? While mainstream media outlets attribute these global infrastructural anomalies to routine telemetry updates and telecom modernization projects, independent signal analysts warn that the true architecture of the planetary synchronization array is entering its final operational phase before full system initialization." \
             --post_status=publish
+        wp post create --post_type=post --post_title="Sample page 1" --post_content="Page 1" --post_status=publish
+        wp post create --post_type=post --post_title="Sample page 2" --post_content="Page 2" --post_status=publish
+        wp post create --post_type=post --post_title="Sample page 3" --post_content="Page 3" --post_status=publish
+        wp post create --post_type=post --post_title="Sample page 4" --post_content="Page 4" --post_status=publish
+        wp post create --post_type=post --post_title="Sample page 5" --post_content="Page 5" --post_status=publish
         if ! wp user get admin --field=ID; then
           wp user create admin admin@example.com --role=administrator
         fi
         wp user update admin --user_pass="local-dev-password"
+        cp /usr/local/bin/wp /var/www/html
 
 volumes:
   db_data:

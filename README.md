@@ -54,7 +54,17 @@ docker compose exec db mysql -uwordpress -pwordpress wordpress
 ## Run a wp command
 
 ```bash
-
+docker run --rm -it \
+    --user="33:33" \
+    -v wordpress_data:/var/www/html \
+    -v ./nrfc-auto-links.php:/var/www/html/wp-content/plugins/nrfc-auto-links/nrfc-auto-links.php:ro \
+    -v ./src:/var/www/html/wp-content/plugins/nrfc-auto-links/src:ro \
+    -e WORDPRESS_DB_HOST=db \
+    -e WORDPRESS_DB_USER=wordpress \
+    -e WORDPRESS_DB_PASSWORD=wordpress \
+    -e WORDPRESS_DB_NAME=wordpress \
+    --entrypoint wp "${CMD}"\
+    wordpress:cli-php8.4
 ```
 
 ## Browser Tests
