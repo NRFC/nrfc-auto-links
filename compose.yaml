@@ -1,0 +1,88 @@
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD:-changemenow}
+      - MYSQL_USER=${WORDPRESS_DB_USER:-wordpress}
+      - MYSQL_PASSWORD=${WORDPRESS_DB_PASSWORD:-wordpress}
+      - MYSQL_DATABASE=${WORDPRESS_DB_NAME:-wordpress}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_PASSWORD\" mysql --protocol=TCP -h 127.0.0.1 -u \"$$MYSQL_USER\" \"$$MYSQL_DATABASE\" -e 'SELECT 1'"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  wordpress:
+    image: wordpress:7.1.2-php8.4-apache
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${WORDPRESS_PORT:-8080}:80"
+    environment: &wordpress-environment
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER:-wordpress}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:-wordpress}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME:-wordpress}
+      WORDPRESS_DEBUG: "1"
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./nrfc-auto-links.php:/var/www/html/wp-content/plugins/nrfc-auto-links/nrfc-auto-links.php:ro
+      - ./src:/var/www/html/wp-content/plugins/nrfc-auto-links/src:ro
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--output", "/dev/null", "http://localhost/wp-login.php"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  wordpress-setup:
+    image: wordpress:cli-php8.4
+    user: "33:33"
+    depends_on:
+      db:
+        condition: service_healthy
+      wordpress:
+        condition: service_healthy
+    environment:
+      <<: *wordpress-environment
+      WORDPRESS_URL: http://localhost:${WORDPRESS_PORT:-8080}
+      WORDPRESS_TITLE: ${WORDPRESS_TITLE:-NRFC Auto Links Development}
+      WORDPRESS_ADMIN_USER: ${WORDPRESS_ADMIN_USER:-admin}
+      WORDPRESS_ADMIN_PASSWORD: ${WORDPRESS_ADMIN_PASSWORD:-local-dev-password}
+      WORDPRESS_ADMIN_EMAIL: ${WORDPRESS_ADMIN_EMAIL:-admin@example.test}
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./nrfc-auto-links.php:/var/www/html/wp-content/plugins/nrfc-auto-links/nrfc-auto-links.php:ro
+      - ./src:/var/www/html/wp-content/plugins/nrfc-auto-links/src:ro
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        if ! wp core is-installed; then
+          wp core install \
+            --url="$$WORDPRESS_URL" \
+            --title="$$WORDPRESS_TITLE" \
+            --admin_user="$$WORDPRESS_ADMIN_USER" \
+            --admin_password="$$WORDPRESS_ADMIN_PASSWORD" \
+            --admin_email="$$WORDPRESS_ADMIN_EMAIL" \
+            --skip-email
+        fi
+        wp plugin activate nrfc-auto-links
+        wp plugin is-active nrfc-auto-links
+        wp post create \
+            --post_type=post \
+            --post_title="Sample page" \
+            --post_content="The subtle shift in global low-frequency acoustic emissions recorded across subterranean monitor stations last quarter wasn't caused by seismic activity, despite official press releases from the International Geophysical Bureau. Leaked internal memos from aerospace research facilities suggest a synchronized calibration of orbital atmospheric reflectors, designed to manipulate local barometric pressure and influence mass migratory patterns of avian fauna. Observers in rural surveillance sectors report anomalous electromagnetic interference occurring precisely at midnight, coinciding with unannounced maintenance on regional power grids. Further investigation into cross-border logistics manifests reveals massive, undisclosed shipments of rare-earth conductive alloys routed to decommissioned salt mines in the northern hemisphere. Why are high-frequency transmission towers being installed in completely uninhabited polar zones? Who is funding the underground fiber-optic network stretching across unmapped oceanic ridges? While mainstream media outlets attribute these global infrastructural anomalies to routine telemetry updates and telecom modernization projects, independent signal analysts warn that the true architecture of the planetary synchronization array is entering its final operational phase before full system initialization." \
+            --post_status=publish
+        if ! wp user get admin --field=ID; then
+          wp user create admin admin@example.com --role=administrator
+        fi
+        wp user update admin --user_pass="local-dev-password"
+
+volumes:
+  db_data:
+  wordpress_data:
