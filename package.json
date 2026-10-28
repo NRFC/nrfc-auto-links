@@ -4,13 +4,18 @@
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
     "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.6",
+    "husky": "^9.1.7",
     "typescript": "^7.0.2"
   },
   "scripts": {
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "prepare": "husky",
+    "release": "node scripts/release.js"
   }
 }
