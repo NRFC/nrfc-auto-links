@@ -36,13 +36,13 @@ export default defineConfig({
   projects: [
     {
       name: 'setup',
-      testMatch: /01_add_autolink\.spec\.ts/,
+      testMatch: /01_admin-screens\.spec\.ts/,
     },
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       dependencies: ['setup'],
-      testIgnore: /01_add_autolink\.spec\.ts/,
+      testIgnore: /01_admin-screens\.spec\.ts/,
     },
 
     // {
