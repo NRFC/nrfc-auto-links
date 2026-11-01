@@ -1,4 +1,5 @@
-import {test, expect, Page} from '@playwright/test';
+import { test, expect, Page, BrowserContext } from '@playwright/test';
+import { link_text } from "./test-data";
 
 async function randomOption(page: Page, selector: any) {
   const selectLocator = page.locator(selector).last();
@@ -14,23 +15,72 @@ async function addRule(page: Page, value: string) {
   await page.getByRole('button', {name: 'Save Settings'}).click();
 }
 
-test.describe('Create auto-link settings', () => {
-  test('login to the admin screen', async ({ page }) => {
-    const response = await page.goto('/wp-admin');
+let context: BrowserContext;
+let sharedPage: Page;
 
-    expect(response?.status()).toBe(200);
+test.beforeAll(async ({ browser }) => {
+  context = await browser.newContext();
+  sharedPage = await context.newPage();
 
-    await page.locator('#user_login').fill('admin');
-    await page.locator('#user_pass').fill('local-dev-password');
-    await page.locator('#wp-submit').click();
+  const response = await sharedPage.goto('/wp-admin');
+  expect(response?.status()).toBe(200);
 
-    await page.getByRole('link', { name: 'Settings', exact: true }).click();
-    await page.getByRole('link', { name: 'NRFC Auto Links' }).click();
+  await sharedPage.locator('#user_login').fill('admin');
+  await sharedPage.locator('#user_pass').fill('local-dev-password');
 
-    await expect(page).toHaveURL(/page=nrfc-auto-links/);
-    await expect(page.getByRole('heading', { name: 'NRFC Auto Links Settings' })).toBeVisible();
+  await Promise.all([
+    sharedPage.waitForURL('**/wp-admin/'),
+    sharedPage.locator('#wp-submit').click()
+  ]);
+});
 
-    await addRule(page, 'acoustic');
-    await addRule(page, 'seismic');
-  });
+test.afterAll(async () => {
+  await context?.close();
+});
+
+test('Access admin menu', async () => {
+  const page = await context.newPage();
+  await page.goto('http://localhost:8080/wp-admin');
+
+  await page.getByRole('link', {name: "Settings", exact: true}).click();
+  await expect(page).toHaveURL(/options-general.php/);
+  await expect(page.getByRole('heading', {name: 'General Settings'})).toBeVisible();
+
+  await page.getByRole('link', {name: "NRFC Auto Links", exact: true}).click();
+  await expect(page).toHaveURL(/page=nrfc-auto-links/);
+  await expect(page.getByRole('heading', {name: 'NRFC Auto Links Settings'})).toBeVisible();
+
+  await page.close();
+});
+
+test.describe('Create links', () => {
+  test.describe.configure({ mode: 'serial' });
+
+  for (const item of link_text) {
+    test(`Create ${item}`, async () => {
+      const page = await context.newPage();
+      await page.goto('http://localhost:8080/wp-admin/options-general.php?page=nrfc-auto-links');
+
+      await expect(page).toHaveURL(/page=nrfc-auto-links/);
+      await expect(page.getByRole('heading', {name: 'NRFC Auto Links Settings'})).toBeVisible();
+      await addRule(page, item);
+
+
+      await page.close();
+    });
+  }
+});
+
+test('Test delete button', async () => {
+  const page = await context.newPage();
+  await page.goto('http://localhost:8080/wp-admin/options-general.php?page=nrfc-auto-links');
+
+  // Create a link with random text to avoid collisions
+  // Wait for it to be created
+  // Find the link in the admin page
+
+  // Find it's delete button
+  // Click the delete button
+  // Wait for the link to be deleted
+  // Check that the link is no longer present in the admin page
 });
