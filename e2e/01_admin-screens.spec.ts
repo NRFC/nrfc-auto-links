@@ -71,16 +71,29 @@ test.describe('Create links', () => {
   }
 });
 
+
+
 test('Test delete button', async () => {
   const page = await context.newPage();
-  await page.goto('http://localhost:8080/wp-admin/options-general.php?page=nrfc-auto-links');
 
-  // Create a link with random text to avoid collisions
-  // Wait for it to be created
-  // Find the link in the admin page
+  await page.goto(
+    'http://localhost:8080/wp-admin/options-general.php?page=nrfc-auto-links'
+  );
+  await expect(
+    page.getByRole('heading', { name: 'NRFC Auto Links Settings' })
+  ).toBeVisible();
 
-  // Find it's delete button
-  // Click the delete button
-  // Wait for the link to be deleted
-  // Check that the link is no longer present in the admin page
+  const uniqueText = `delete-test-${Date.now()}`;
+  await addRule(page, uniqueText);
+  
+  const createdRule = page.locator(
+    `input[name^="nrfc_auto_links_settings[rules]"][value="${uniqueText}"]`
+  );
+  await expect(createdRule).toBeVisible();
+  const deleteButtons = page.getByText('Delete', { exact: true });
+  await deleteButtons.last().click();
+
+  await expect(createdRule).toHaveCount(0);
+
+  await page.close();
 });
