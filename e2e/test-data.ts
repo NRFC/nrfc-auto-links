@@ -1,0 +1,1 @@
+export const link_text = ['acoustic', 'seismic', 'telecom'];

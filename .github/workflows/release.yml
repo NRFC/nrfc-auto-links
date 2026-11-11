@@ -1,7 +1,10 @@
 name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Playwright Tests"] # Must match the 'name:' field in playwright.yml
+    types:
+      - completed
     branches:
       - main
 
